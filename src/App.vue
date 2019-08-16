@@ -2,21 +2,23 @@
   <div id="app">
     <m-header />
     <tab />
-    <router-view/>
+    <keep-alive>
+      <router-view />
+    </keep-alive>
   </div>
 </template>
 
 <script>
-import MHeader from './components/m-header/m-header'
-import Tab from './components/tab/tab.vue'
+import MHeader from "./components/m-header/m-header";
+import Tab from "./components/tab/tab.vue";
 
 export default {
-  name: 'App',
+  name: "App",
   components: {
     MHeader,
     Tab
   }
-}
+};
 </script>
 
 <style>

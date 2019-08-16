@@ -15,9 +15,8 @@
 </template>
 
 <script>
-import { addClass } from "common/js/dom";
-import BScroll from "better-scroll";
-import { setTimeout } from "timers";
+import { addClass } from "common/js/dom"
+import BScroll from "better-scroll"
 
 export default {
   name: "slider",
@@ -38,7 +37,8 @@ export default {
   data() {
     return {
       dots: [],
-      currentPageIndex: 0
+      currentPageIndex: 0,
+      timer: 0
     };
   },
   mounted() {
@@ -48,7 +48,16 @@ export default {
       this._initSlider();
 
       if (this.autoPlay) this._play();
-    }, 20);
+    }, 20)
+
+    window.addEventListener('resize', () => {
+      if (!this.slider) return
+      this._setSilderWidth(true)
+      this.slider.refresh()
+    })
+  },
+  destroyed () {
+    clearTimeout(this.timer)
   },
   methods: {
     _setSilderWidth(isResize) {
@@ -87,24 +96,23 @@ export default {
       window.slider = this.slider;
 
       this.slider.on("scrollEnd", () => {
+        const pageIndex = this.slider.getCurrentPage().pageX;
+        this.currentPageIndex = pageIndex > 5 ? 0 : pageIndex - 1;
         if (this.autoPlay) this._play();
       });
 
       this.slider.on("beforeScrollStart", () => {
-        const pageIndex = this.slider.getCurrentPage().pageX;
-        this.currentPageIndex = pageIndex > 5 ? 0 : pageIndex - 1;
         if (this.autoPlay) {
           clearTimeout(this.timer)
         }
       });
     },
     _play() {
-      clearTimeout(this.timer)
       this.timer = setTimeout(() => {
-        const pageIndex = this.slider.getCurrentPage().pageX + 1;
+        const pageIndex = this.slider.getCurrentPage().pageX + 1
         this.slider.goToPage(pageIndex, 0, 400);
-        this.currentPageIndex = pageIndex > 5 ? 0 : pageIndex - 1;
-      }, this.interval);
+        this.currentPageIndex = pageIndex > 5 ? 0 : pageIndex - 1
+      }, this.interval)
     }
   }
 };
