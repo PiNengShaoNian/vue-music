@@ -18,6 +18,21 @@ apiRoutes.get('/getDiscList', (req, res) => {
   })
 })
 
+apiRoutes.get('/getSongVkey', (req, res) => {
+  const url = `https://c.y.qq.com/base/fcgi-bin/fcg_music_express_mobile3.fcg`
+
+  axios
+    .get(url, {
+      params: req.query
+    })
+    .then(response => {
+      res.json(response.data)
+    })
+    .catch(e => {
+      console.log(e)
+    })
+})
+
 app.use('/api', apiRoutes)
 
 app.listen(3000)

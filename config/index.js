@@ -9,7 +9,7 @@ module.exports = {
     assetsSubDirectory: 'static',
     assetsPublicPath: '/',
     proxyTable: {
-      '/api/getDiscList': {
+      '/api': {
         target: 'http://localhost:3000'
       }
     },
