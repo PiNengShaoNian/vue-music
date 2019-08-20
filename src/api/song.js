@@ -30,6 +30,8 @@ export function getSongUrl(song) {
             //     vkey: res.data.items[0].vkey,
             //     filename: `C400${song.mid}.m4a`,
             // })
-            return `http://ws.stream.qqmusic.qq.com/C400${song.mid}.m4a?fromtag=0&guid=126548448&vkey=${res.data.items[0].vkey}`
+            return res.data.items[0].vkey ? 
+            `http://ws.stream.qqmusic.qq.com/C400${song.mid}.m4a?fromtag=0&guid=126548448&vkey=${res.data.items[0].vkey}`
+            : ''
         })
 }

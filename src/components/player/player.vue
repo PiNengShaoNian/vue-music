@@ -1,10 +1,10 @@
 <template>
   <div class="player">
-    <transition 
-      @enter='enter'
-      @after-enter='afterEnter'
-      @leave='leave'
-      @after-leave='afterLeave'
+    <transition
+      @enter="enter"
+      @after-enter="afterEnter"
+      @leave="leave"
+      @after-leave="afterLeave"
       name="normal"
     >
       <div class="normal-player" v-show="fullScreen">
@@ -12,7 +12,7 @@
           <img width="100%" height="100%" :src="currentSong.image" />
         </div>
         <div class="top">
-          <div class="back" @click='back'>
+          <div class="back" @click="back">
             <i class="icon-back"></i>
           </div>
           <h1 class="title" v-html="currentSong.name"></h1>
@@ -20,8 +20,8 @@
         </div>
         <div class="middle">
           <div class="middle-l">
-            <div class="cd-wrapper" ref='cdWrapper'>
-              <div class="cd">
+            <div class="cd-wrapper" ref="cdWrapper">
+              <div :class="rotateCls" class="cd">
                 <img :src="currentSong.image" alt class="image" />
               </div>
             </div>
@@ -35,19 +35,25 @@
             <span class="dot"></span>
             <span class="dot"></span>
           </div>
-          <div class="progress-wrapper"></div>
+          <div class="progress-wrapper">
+              <span class="time time-l">{{format(currentTime)}}</span>
+              <div class="progress-bar-wrapper">
+                  <progress-bar @percentChange='handlePercentChange' :percent='percent'></progress-bar>
+              </div>
+              <span class="time time-r">{{format(currentSong.duration)}}</span>
+          </div>
           <div class="operators">
             <div class="icon i-left">
               <i class="icon-sequence"></i>
             </div>
             <div class="icon i-left">
-              <i class="icon-prev"></i>
+              <i @click="prev" class="icon-prev"></i>
             </div>
             <div class="icon i-center">
-              <i class="icon-play"></i>
+              <i :class="playIcon" @click="togglePlaying"></i>
             </div>
             <div class="icon i-right">
-              <i class="icon-next"></i>
+              <i @click="next" class="icon-next"></i>
             </div>
             <div class="icon i-right">
               <i class="icon icon-not-favorite"></i>
@@ -59,93 +65,191 @@
     <transition name="mini">
       <div class="mini-player" v-show="!fullScreen">
         <div class="icon">
-          <img :src="currentSong.image" width="40" height="40" alt class="play" />
+          <img :src="currentSong.image" width="40" height="40" alt :class="rotateCls" />
         </div>
         <div class="text">
           <h2 class="name" v-html="currentSong.name"></h2>
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
-        <div class="control"></div>
+        <div class="control">
+          <i @click="togglePlaying" class="icon-mini" :class="miniIcon"></i>
+        </div>
         <div class="control">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <audio ref="audio" @error="error" @timeupdate="timeupdate"></audio>
   </div>
 </template>
 
 <script>
 import { mapGetters, mapMutations } from "vuex";
-import animations from 'create-keyframe-animation'
+import animations from "create-keyframe-animation";
+import { getSongUrl } from "api/song";
+import ProgressBar from 'base/progress-bar/progress-bar.vue';
 
 export default {
   name: "player",
+  data() {
+      return {
+          currentTime: 0
+      }
+  },
+  components: {
+      ProgressBar,
+  },
   computed: {
-    ...mapGetters(["fullScreen", "currentSong"])
+    playIcon() {
+      return this.playing ? "icon-pause" : "icon-play";
+    },
+    miniIcon() {
+      return this.playing ? "icon-pause-mini" : "icon-play-mini";
+    },
+    rotateCls() {
+      return this.playing ? "play" : "play pause";
+    },
+    percent() {
+        return this.currentTime / this.currentSong.duration
+    },
+    ...mapGetters([
+      "fullScreen",
+      "currentSong",
+      "playing",
+      "currentIndex",
+      "playlist"
+    ])
+  },
+  watch: {
+    currentSong() {
+      getSongUrl(this.currentSong).then(res => {
+        if (res) this.isAvaiableUrl = true;
+        else this.isAvaiableUrl = false;
+
+        this.$refs.audio.src = res;
+        this.$nextTick(() => {
+          this.setPlayState(true);
+          this.$refs.audio.play();
+        });
+      });
+    },
+    playing(playState) {
+      if (!this.isAvaiableUrl) return;
+      const audio = this.$refs.audio;
+      this.$nextTick(() => {
+        playState ? audio.play() : audio.pause();
+      });
+    }
   },
   methods: {
-      enter (el, done) {
-          const {x , y, scale} = this._getPosAndScale()
-          let animation = {
-              0: {
-                  transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`
-              },
-              60: {
-                  transform: `translate3d(0, 0, 0) scale(1.1)`
-              },
-              100: {
-                  transform: `translate3d(0, 0, 0) scale(1)`
-              }
-          }
+    error(e) {
+      console.log(e);
+    },
+    handlePercentChange(percent) {
+        const currentTime = this.currentSong.duration * percent
+        this.$refs.audio.currentTime = currentTime
+        if(!this.playing) this.togglePlaying()
+    },
+    timeupdate(e) {
+        this.currentTime = e.target.currentTime
+    },
+    format(interval) {
+        interval = interval | 0
+        const minute = interval / 60 | 0
+        const second = this._pad(interval % 60)
+        return `${minute}:${second}`
+    },
+    _pad(num, n = 2) {
+        let len = num.toString().length
+        while(len < n) {
+            num = '0' + num
+            len++
+        }
+        return num
+    },
+    prev() {
+      let index = this.currentIndex + 1;
+      if (index === this.playlist.length) {
+        index = 0;
+      }
+      this.setCurrentIndex(index);
+    },
+    next() {
+      let index = this.currentIndex - 1;
+      if (index === -1) {
+        index = this.playlist.length - 1;
+      }
+      this.setCurrentIndex(index);
+    },
+    togglePlaying() {
+      this.setPlayState(!this.playing);
+    },
+    enter(el, done) {
+      const { x, y, scale } = this._getPosAndScale();
+      let animation = {
+        0: {
+          transform: `translate3d(${x}px, ${y}px, 0) scale(${scale})`
+        },
+        60: {
+          transform: `translate3d(0, 0, 0) scale(1.1)`
+        },
+        100: {
+          transform: `translate3d(0, 0, 0) scale(1)`
+        }
+      };
 
-          animations.registerAnimation({
-              name: 'move',
-              animation,
-              presets: {
-                  duration: 400,
-                  easing: 'linear'
-              }
-          })
+      animations.registerAnimation({
+        name: "move",
+        animation,
+        presets: {
+          duration: 400,
+          easing: "linear"
+        }
+      });
 
-          animations.runAnimation(this.$refs.cdWrapper, 'move', done)
-      },
-      afterEnter(el, done) {
-          animations.unregisterAnimation('move')
-          this.$refs.cdWrapper.style.animation = ''
-      },
-      leave (el, done) {
-          this.$refs.cdWrapper.style.transition = 'all .4s'
-          const { x, y, scale } = this._getPosAndScale()
-          this.$refs.cdWrapper.style['transform'] = `translate3d(${x}px,${y}px,0) scale(${scale})`
-          this.$refs.cdWrapper.addEventListener('transitionend', done)
-      },
-      afterLeave (el, done) {
-          this.$refs.cdWrapper.style.transition = ''
-          this.$refs.cdWrapper.style['transform'] = ''
-      },
-      _getPosAndScale() {
-          const targetWidth = 40
-          const paddingLeft = 40
-          const paddingBottom = 30
-          const paddingTop = 80
-          const width = window.innerWidth * 0.8
-          const scale = targetWidth / width
-          const x = -(window.innerWidth / 2 - paddingLeft)
-          const y = window.innerHeight - paddingTop - width / 2 - paddingBottom
+      animations.runAnimation(this.$refs.cdWrapper, "move", done);
+    },
+    afterEnter(el, done) {
+      animations.unregisterAnimation("move");
+      this.$refs.cdWrapper.style.animation = "";
+    },
+    leave(el, done) {
+      this.$refs.cdWrapper.style.transition = "all .4s";
+      const { x, y, scale } = this._getPosAndScale();
+      this.$refs.cdWrapper.style[
+        "transform"
+      ] = `translate3d(${x}px,${y}px,0) scale(${scale})`;
+      this.$refs.cdWrapper.addEventListener("transitionend", done);
+    },
+    afterLeave(el, done) {
+      this.$refs.cdWrapper.style.transition = "";
+      this.$refs.cdWrapper.style["transform"] = "";
+    },
+    _getPosAndScale() {
+      const targetWidth = 40;
+      const paddingLeft = 40;
+      const paddingBottom = 30;
+      const paddingTop = 80;
+      const width = window.innerWidth * 0.8;
+      const scale = targetWidth / width;
+      const x = -(window.innerWidth / 2 - paddingLeft);
+      const y = window.innerHeight - paddingTop - width / 2 - paddingBottom;
 
-          return {
-              x,
-              y,
-              scale,
-          }
-      },
-      back() {
-          this.setFullScreen(false)
-      },
-      ...mapMutations({
-          setFullScreen: 'SET_FULL_SCREEN'
-      })
-  },
+      return {
+        x,
+        y,
+        scale
+      };
+    },
+    back() {
+      this.setFullScreen(false);
+    },
+    ...mapMutations({
+      setFullScreen: "SET_FULL_SCREEN",
+      setPlayState: "SET_PLAYING_STATE",
+      setCurrentIndex: "SET_CURRENT_INDEX"
+    })
+  }
 };
 </script>
 
@@ -260,6 +364,14 @@ export default {
             border: 10px solid rgba(255, 255, 255, 0.1);
             border-radius: 50%;
 
+            &.play {
+              animation: rotate 20s linear infinite;
+            }
+
+            &.pause {
+              animation-play-state: paused;
+            }
+
             .image {
               position: absolute;
               left: 0;
@@ -313,6 +425,24 @@ export default {
         width: 80%;
         margin: 0 auto;
         padding: 10px 0;
+
+        .time {
+            color: $color-text;
+            font-size: $font-size-small;
+            flex: 0 0 30px;
+            line-height: 30px;
+            width: 30px;
+            &.time-l {
+                text-align: left;
+            }
+            &.time-r {
+                text-align: right;
+            } 
+        }
+
+        .progress-bar-wrapper {
+            flex: 1;
+        }
       }
 
       .operators {
@@ -364,11 +494,11 @@ export default {
     background: $color-highlight-background;
 
     &.mini-enter-active, &.mini-leave-active {
-        transition: all .4s;
+      transition: all 0.4s;
     }
 
     &.mini-enter, &.mini-leave-to {
-        opacity: 0;
+      opacity: 0;
     }
 
     .icon {
@@ -381,6 +511,10 @@ export default {
 
         &.play {
           animation: rotate 10s linear infinite;
+        }
+
+        &.pause {
+          animation-play-state: paused;
         }
       }
     }
@@ -411,6 +545,15 @@ export default {
       flex: 0 0 30px;
       width: 30px;
       padding: 0 10px;
+
+      .icon-play-mini, .icon-pause-mini, .icon-playlist {
+        font-size: 30px;
+        color: $color-theme-d;
+      }
+
+      .icon-mini {
+        font-size: 32px;
+      }
     }
   }
 }
