@@ -36,11 +36,11 @@
             <span class="dot"></span>
           </div>
           <div class="progress-wrapper">
-              <span class="time time-l">{{format(currentTime)}}</span>
-              <div class="progress-bar-wrapper">
-                  <progress-bar @percentChange='handlePercentChange' :percent='percent'></progress-bar>
-              </div>
-              <span class="time time-r">{{format(currentSong.duration)}}</span>
+            <span class="time time-l">{{format(currentTime)}}</span>
+            <div class="progress-bar-wrapper">
+              <progress-bar @percentChange="handlePercentChange" :percent="percent"></progress-bar>
+            </div>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
             <div class="icon i-left">
@@ -72,7 +72,9 @@
           <p class="desc" v-html="currentSong.singer"></p>
         </div>
         <div class="control">
-          <i @click="togglePlaying" class="icon-mini" :class="miniIcon"></i>
+          <progress-circle :radius="radius" :percent="percent">
+            <i @click="togglePlaying" class="icon-mini" :class="miniIcon"></i>
+          </progress-circle>
         </div>
         <div class="control">
           <i class="icon-playlist"></i>
@@ -87,17 +89,20 @@
 import { mapGetters, mapMutations } from "vuex";
 import animations from "create-keyframe-animation";
 import { getSongUrl } from "api/song";
-import ProgressBar from 'base/progress-bar/progress-bar.vue';
+import ProgressBar from "base/progress-bar/progress-bar.vue";
+import ProgressCircle from 'base/progress-circle/progress-circle.vue';
 
 export default {
   name: "player",
   data() {
-      return {
-          currentTime: 0
-      }
+    return {
+      currentTime: 0,
+      radius: 32
+    };
   },
   components: {
-      ProgressBar,
+    ProgressBar,
+    ProgressCircle
   },
   computed: {
     playIcon() {
@@ -110,7 +115,7 @@ export default {
       return this.playing ? "play" : "play pause";
     },
     percent() {
-        return this.currentTime / this.currentSong.duration
+      return this.currentTime / this.currentSong.duration;
     },
     ...mapGetters([
       "fullScreen",
@@ -146,26 +151,26 @@ export default {
       console.log(e);
     },
     handlePercentChange(percent) {
-        const currentTime = this.currentSong.duration * percent
-        this.$refs.audio.currentTime = currentTime
-        if(!this.playing) this.togglePlaying()
+      const currentTime = this.currentSong.duration * percent;
+      this.$refs.audio.currentTime = currentTime;
+      if (!this.playing) this.togglePlaying();
     },
     timeupdate(e) {
-        this.currentTime = e.target.currentTime
+      this.currentTime = e.target.currentTime;
     },
     format(interval) {
-        interval = interval | 0
-        const minute = interval / 60 | 0
-        const second = this._pad(interval % 60)
-        return `${minute}:${second}`
+      interval = interval | 0;
+      const minute = (interval / 60) | 0;
+      const second = this._pad(interval % 60);
+      return `${minute}:${second}`;
     },
     _pad(num, n = 2) {
-        let len = num.toString().length
-        while(len < n) {
-            num = '0' + num
-            len++
-        }
-        return num
+      let len = num.toString().length;
+      while (len < n) {
+        num = "0" + num;
+        len++;
+      }
+      return num;
     },
     prev() {
       let index = this.currentIndex + 1;
@@ -427,21 +432,23 @@ export default {
         padding: 10px 0;
 
         .time {
-            color: $color-text;
-            font-size: $font-size-small;
-            flex: 0 0 30px;
-            line-height: 30px;
-            width: 30px;
-            &.time-l {
-                text-align: left;
-            }
-            &.time-r {
-                text-align: right;
-            } 
+          color: $color-text;
+          font-size: $font-size-small;
+          flex: 0 0 30px;
+          line-height: 30px;
+          width: 30px;
+
+          &.time-l {
+            text-align: left;
+          }
+
+          &.time-r {
+            text-align: right;
+          }
         }
 
         .progress-bar-wrapper {
-            flex: 1;
+          flex: 1;
         }
       }
 
@@ -553,6 +560,9 @@ export default {
 
       .icon-mini {
         font-size: 32px;
+        position: absolute;
+        left: 0;
+        top: 0;
       }
     }
   }
