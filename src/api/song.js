@@ -30,8 +30,30 @@ export function getSongUrl(song) {
             //     vkey: res.data.items[0].vkey,
             //     filename: `C400${song.mid}.m4a`,
             // })
-            return res.data.items[0].vkey ? 
-            `http://ws.stream.qqmusic.qq.com/C400${song.mid}.m4a?fromtag=0&guid=126548448&vkey=${res.data.items[0].vkey}`
-            : ''
+            return res.data.items[0].vkey ?
+                `http://ws.stream.qqmusic.qq.com/C400${song.mid}.m4a?fromtag=0&guid=126548448&vkey=${res.data.items[0].vkey}`
+                : ''
+        })
+}
+
+export function getLyric(mid) {
+    const url = '/api/lyric'
+
+    const data = Object.assign({}, commonParams, {
+        songmid: mid,
+        platform: 'yqq',
+        hostUin: 0,
+        needNewCode: 0,
+        categoryId: 10000000,
+        pcachetime: +new Date(),
+        format: 'json'
+    })
+
+    return axios
+        .get(url, {
+            params: data
+        })
+        .then(res => {
+            return res.data
         })
 }

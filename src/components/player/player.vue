@@ -43,8 +43,8 @@
             <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
-            <div class="icon i-left">
-              <i class="icon-sequence"></i>
+            <div class="icon i-left" @click="changeMode">
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left">
               <i @click="prev" class="icon-prev"></i>
@@ -63,7 +63,7 @@
       </div>
     </transition>
     <transition name="mini">
-      <div class="mini-player" v-show="!fullScreen">
+      <div class="mini-player" v-show="!fullScreen" @click='open'>
         <div class="icon">
           <img :src="currentSong.image" width="40" height="40" alt :class="rotateCls" />
         </div>
@@ -81,7 +81,7 @@
         </div>
       </div>
     </transition>
-    <audio ref="audio" @error="error" @timeupdate="timeupdate"></audio>
+    <audio @ended="end" ref="audio" @error="error" @timeupdate="timeupdate"></audio>
   </div>
 </template>
 
@@ -90,7 +90,9 @@ import { mapGetters, mapMutations } from "vuex";
 import animations from "create-keyframe-animation";
 import { getSongUrl } from "api/song";
 import ProgressBar from "base/progress-bar/progress-bar.vue";
-import ProgressCircle from 'base/progress-circle/progress-circle.vue';
+import ProgressCircle from "base/progress-circle/progress-circle.vue";
+import { playMode } from "common/js/config";
+import { shuffle } from "common/js/utils";
 
 export default {
   name: "player",
@@ -117,12 +119,21 @@ export default {
     percent() {
       return this.currentTime / this.currentSong.duration;
     },
+    iconMode() {
+      return this.mode === playMode.sequence
+        ? "icon-sequence"
+        : this.mode === playMode.loop
+        ? "icon-loop"
+        : "icon-random";
+    },
     ...mapGetters([
       "fullScreen",
       "currentSong",
       "playing",
       "currentIndex",
-      "playlist"
+      "playlist",
+      "mode",
+      "sequenceList"
     ])
   },
   watch: {
@@ -137,6 +148,12 @@ export default {
           this.$refs.audio.play();
         });
       });
+
+      this.currentSong.getLyric().then(res => {
+          console.log({
+              lyric: res
+          })
+      })
     },
     playing(playState) {
       if (!this.isAvaiableUrl) return;
@@ -147,8 +164,20 @@ export default {
     }
   },
   methods: {
+    end(e) {
+        if(this.mode === playMode.loop) this.loop()
+        else this.next()
+    },
+    loop() {
+        this.$refs.audio.currentTime = 0
+        this.$refs.audio.play()
+        this.setPlayState(true)
+    },
     error(e) {
       console.log(e);
+    },
+    open() {
+        this.setFullScreen(true)
     },
     handlePercentChange(percent) {
       const currentTime = this.currentSong.duration * percent;
@@ -164,6 +193,22 @@ export default {
       const second = this._pad(interval % 60);
       return `${minute}:${second}`;
     },
+    changeMode() {
+      const mode = (this.mode + 1) % 3;
+      this.setPlayMode(mode);
+      let list = null;
+      if (mode === playMode.random) {
+        list = shuffle(this.sequenceList);
+      } else list = this.sequenceList;
+      this.resetCurrentIndex(list);
+      this.setPlaylist(list);
+    },
+    resetCurrentIndex(list) {
+      let index = list.findIndex(item => {
+        return item.id === this.currentSong.id;
+      });
+      this.setCurrentIndex(index);
+    },
     _pad(num, n = 2) {
       let len = num.toString().length;
       while (len < n) {
@@ -172,14 +217,14 @@ export default {
       }
       return num;
     },
-    prev() {
+    next() {
       let index = this.currentIndex + 1;
       if (index === this.playlist.length) {
         index = 0;
       }
       this.setCurrentIndex(index);
     },
-    next() {
+    prev() {
       let index = this.currentIndex - 1;
       if (index === -1) {
         index = this.playlist.length - 1;
@@ -252,7 +297,9 @@ export default {
     ...mapMutations({
       setFullScreen: "SET_FULL_SCREEN",
       setPlayState: "SET_PLAYING_STATE",
-      setCurrentIndex: "SET_CURRENT_INDEX"
+      setCurrentIndex: "SET_CURRENT_INDEX",
+      setPlayMode: "SET_PLAY_MODE",
+      setPlaylist: "SET_PLAYLIST"
     })
   }
 };
