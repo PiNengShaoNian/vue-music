@@ -21,5 +21,11 @@ export default  {
     },
     [types.SET_SEQUENCE_LIST] (state, list) {
         state.sequenceList = list
+    },
+    [types.SET_DISC] (state, disc) {
+        state.disc = disc
+    },
+    [types.SET_TOPLIST] (state, list) {
+        state.toplist = list
     }
 }

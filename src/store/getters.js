@@ -13,3 +13,7 @@ export const currentIndex = state => state.currentIndex
 export const mode = state => state.mode
 
 export const currentSong = state => (state.playlist[state.currentIndex] || {})
+
+export const disc = state => state.disc
+
+export const toplist = state => state.toplist

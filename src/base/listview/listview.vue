@@ -90,6 +90,9 @@ export default {
     this.listHeight = [];
   },
   methods: {
+    refresh() {
+      this.$refs.listview.refresh()
+    },
     selectItem (id) {
       this.$emit('select', id)
     },
@@ -109,10 +112,10 @@ export default {
       }
       this.scrollY = -this.listHeight[index];
       this.$refs.listview.scrollToElement(this.$refs.listGroup[index], 0);
-      console.log({
-        index,
-        listHeight: -this.listHeight[index]
-      });
+      // console.log({
+      //   index,
+      //   listHeight: -this.listHeight[index]
+      // });
     },
     scroll(pos) {
       this.scrollY = pos.y;

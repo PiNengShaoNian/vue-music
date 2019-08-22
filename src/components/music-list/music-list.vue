@@ -23,25 +23,33 @@
       :probe-type="probeType"
     >
       <div class="song-list-wrapper">
-        <song-list @select="selectItem" :songs="songs"></song-list>
+        <song-list :rank='rank' @select="selectItem" :songs="songs"></song-list>
       </div>
+    <div v-show="!songs.length" class="loading-container">
+      <loading></loading>
+    </div>
     </scroll>
+    
   </div>
 </template>
 
 <script>
 import Scroll from "base/scroll/scroll";
 import SongList from "base/song-list/song-list";
+import Loading from 'base/loading/loading.vue'
 import { fixPrefix } from "common/js/dom";
 import { throttle } from "common/js/utils";
 import { mapActions } from "vuex";
+import { playlistMixin } from 'common/js/mixin'
 const RESERVED_HEIGHT = 40;
 
 export default {
   name: "music-list",
+  mixins: [playlistMixin],
   components: {
     Scroll,
-    SongList
+    SongList,
+    Loading
   },
   props: {
     bgImage: {
@@ -55,6 +63,10 @@ export default {
     title: {
       type: String,
       default: ""
+    },
+    rank: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -108,6 +120,11 @@ export default {
     }
   },
   methods: {
+    handlePlaylist(playlist) {
+      const bottom = playlist.length > 0 ? '60px' : ''
+      this.$refs.list.$el.style.bottom = bottom
+      this.$refs.list.refresh()
+    },
     scroll(pos) {
       this.scrollY = pos.y;
     },
@@ -233,6 +250,15 @@ export default {
     .song-list-wrapper {
       padding: 20px 30px;
     }
+
+    .loading-container {
+      position: absolute;
+      width: 100%;
+      top: 50%;
+      transform: translateY(-50%);
+    }
   }
+
+  
 }
 </style>
