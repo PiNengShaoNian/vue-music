@@ -24,3 +24,21 @@ export const shuffle = (list) => {
     }
     return _arr
 }
+
+export const debounce = (func, delay) => {
+    let timer = null
+
+    return (...args) => {
+        if(timer) {
+            clearTimeout(timer)
+            timer = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+        else {
+            timer = setTimeout(() => {
+                func(...args)
+            }, delay)
+        }
+    }
+}
