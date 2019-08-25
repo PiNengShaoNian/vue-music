@@ -164,7 +164,6 @@ export default {
       position: absolute;
       width: 100%;
       top: 50%;
-      transform: translateX(-50%);
     }
   }
 }

@@ -1,5 +1,5 @@
 <template>
-  <div class="player" v-show='playlist.length>0'>
+  <div class="player" v-show="playlist.length>0">
     <transition
       @enter="enter"
       @after-enter="afterEnter"
@@ -170,21 +170,20 @@ export default {
         if (res) this.isAvaiableUrl = true;
         else this.isAvaiableUrl = false;
 
-        if(this.currentLyric) {
-          this.currentLyric.stop()
-          this.currentTime = 0
-          this.playingLyric = ''
-          this.currentLineNum = 0
+        if (this.currentLyric) {
+          this.currentLyric.stop();
+          this.currentTime = 0;
+          this.playingLyric = "";
+          this.currentLineNum = 0;
         }
 
         this.$refs.audio.src = res;
         this.$nextTick(() => {
           this.setPlayState(true);
           this.$refs.audio.play();
+          this.getLyric();
         });
       });
-
-      this.getLyric();
     },
     playing(playState) {
       if (!this.isAvaiableUrl) return;
