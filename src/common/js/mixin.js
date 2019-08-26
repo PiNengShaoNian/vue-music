@@ -64,3 +64,35 @@ export const playerMixin = {
         })
     },
 }
+
+export const searchMixin = {
+    data() {
+        return {
+            query: '',
+            refreshDelay: 120
+        }
+    },
+    computed: {
+        ...mapGetters([
+            'searchHistory'
+        ])
+    },
+    methods: {
+        handleQueryChange(query) {
+            this.query = query
+        },
+        addQuery(query) {
+            this.$refs.searchBox.setQuery(query)
+        },
+        blurInput() {
+            this.$refs.searchBox.blur()
+        },
+        saveQuery() {
+            this.setSearchHistory(this.query)
+        },
+        ...mapActions([
+            'setSearchHistory',
+            'deleteSearchHistory'
+        ])
+    }
+}

@@ -6,7 +6,7 @@
           <h1 class="title">
             <i class="icon" :class="iconMode" @click="changeMode"></i>
             <span class="text">{{modeText}}</span>
-            <span class="clear" @click.stop='showConfirm'>
+            <span class="clear" @click.stop="showConfirm">
               <i class="icon-clear"></i>
             </span>
           </h1>
@@ -36,7 +36,7 @@
           </transition-group>
         </scroll>
         <div class="list-operate">
-          <div class="add">
+          <div class="add" @click='showAddSong'>
             <i class="icon-add"></i>
             <span class="text">添加歌曲到队列</span>
           </div>
@@ -45,29 +45,27 @@
           <span>关闭</span>
         </div>
       </div>
-      <confirm 
-        ref='confirm' 
-        @confirm='confirmClear' 
-        text='是否清空播放列表'
-        confirmBtnText='清空'
-        ></confirm>
+      <confirm ref="confirm" @confirm="confirmClear" text="是否清空播放列表" confirmBtnText="清空"></confirm>
+      <add-song ref='addSong'></add-song>
     </div>
   </transition>
 </template>
 
 <script>
-import { playMode } from "common/js/config";
-import Scroll from "base/scroll/scroll.vue";
-import { mapMutations, mapActions } from "vuex";
 import Confirm from "base/confirm/confirm.vue";
-import { playerMixin } from 'common/js/mixin'
+import Scroll from "base/scroll/scroll.vue";
+import AddSong from 'components/add-song/add-song.vue';
+import { playMode } from "common/js/config";
+import { mapMutations, mapActions } from "vuex";
+import { playerMixin } from "common/js/mixin";
 
 export default {
   name: "playlist",
   mixins: [playerMixin],
   components: {
     Scroll,
-    Confirm
+    Confirm,
+    AddSong
   },
   data() {
     return {
@@ -85,27 +83,33 @@ export default {
     }
   },
   watch: {
-      currentSong(newSong, oldSong) {
-          if(!this.showFlag || newSong.id === oldSong.id) return
+    currentSong(newSong, oldSong) {
+      if (!this.showFlag || newSong.id === oldSong.id) return;
 
-          setTimeout(() => {
-              this.scrollToCurrent(newSong)
-          }, 20)
-      }
+      setTimeout(() => {
+        this.scrollToCurrent(newSong);
+      }, 20);
+    }
   },
   methods: {
+    showAddSong() {
+        this.$refs.addSong.show()
+    },
     scrollToCurrent(current) {
-        const index = this.sequenceList.findIndex(song => {
-            return current.id === song.id
-        })
-        this.$refs.listContent.scrollToElement(this.$refs.list.$el.children[index], 300)
+      const index = this.sequenceList.findIndex(song => {
+        return current.id === song.id;
+      });
+      this.$refs.listContent.scrollToElement(
+        this.$refs.list.$el.children[index],
+        300
+      );
     },
     showConfirm() {
-        this.$refs.confirm.show()
+      this.$refs.confirm.show();
     },
     confirmClear() {
-        this.deleteSongList()
-        this.hide()
+      this.deleteSongList();
+      this.hide();
     },
     deleteOne(item) {
       this.deleteSong(item);
@@ -125,9 +129,9 @@ export default {
     show() {
       this.showFlag = true;
       setTimeout(() => {
-          this.$refs.listContent.refresh()
-          this.scrollToCurrent(this.currentSong)
-      })
+        this.$refs.listContent.refresh();
+        this.scrollToCurrent(this.currentSong);
+      });
     },
     hide() {
       this.showFlag = false;
@@ -138,7 +142,7 @@ export default {
       }
       return "";
     },
-    ...mapActions(["deleteSong", 'deleteSongList'])
+    ...mapActions(["deleteSong", "deleteSongList"])
   }
 };
 </script>

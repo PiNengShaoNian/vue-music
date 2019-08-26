@@ -107,7 +107,7 @@
 <script>
 import animations from "create-keyframe-animation";
 import { getSongUrl } from "api/song";
-import { mapGetters, mapMutations } from 'vuex';
+import { mapGetters, mapMutations, mapActions } from 'vuex';
 import ProgressBar from "base/progress-bar/progress-bar.vue";
 import ProgressCircle from "base/progress-circle/progress-circle.vue";
 import Playlist from 'components/playlist/playlist.vue'
@@ -115,6 +115,8 @@ import Scroll from "base/scroll/scroll.vue";
 import { shuffle } from "common/js/utils";
 import Lyric from "lyric-parser";
 import { playerMixin } from 'common/js/mixin'
+import { playMode } from "common/js/config";
+
 
 export default {
   name: "player",
@@ -162,7 +164,10 @@ export default {
         return
       }
       getSongUrl(this.currentSong).then(res => {
-        if (res) this.isAvaiableUrl = true;
+        if (res) {
+          this.isAvaiableUrl = true;
+          this.savePlayHistory(this.currentSong)
+        }
         else this.isAvaiableUrl = false;
 
         if (this.currentLyric) {
@@ -394,7 +399,10 @@ export default {
     },
     ...mapMutations({
       setFullScreen: "SET_FULL_SCREEN"
-    })
+    }),
+    ...mapActions([
+      'savePlayHistory'
+    ])
   }
 };
 </script>

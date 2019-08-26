@@ -42,12 +42,12 @@ import Suggest from 'components/suggest/suggest.vue'
 import Confirm from 'base/confirm/confirm.vue'
 import { getHotKey } from 'api/search'
 import { ERR_OK } from 'api/config'
-import { mapActions, mapGetters } from 'vuex';
-import {playlistMixin} from 'common/js/mixin'
+import { mapActions } from 'vuex';
+import {playlistMixin, searchMixin} from 'common/js/mixin'
 
 export default {
   name: "Search",
-  mixins: [playlistMixin],
+  mixins: [playlistMixin, searchMixin],
   components: {
     SearchBox,
     Scroll,
@@ -65,10 +65,7 @@ export default {
   computed: {
     shortcut () {
       return this.hotkey.concat(this.searchHistory)
-    },
-    ...mapGetters([
-      'searchHistory'
-    ])
+    }
   },
   created () {
     this._getHotKey()
@@ -101,22 +98,8 @@ export default {
         }
       })
     },
-    addQuery(query) {
-      this.$refs.searchBox.setQuery(query)
-    },
-    handleQueryChange(query) {
-      this.query = query
-    },
-    blurInput() {
-      this.$refs.searchBox.blur()
-    },
-    saveQuery() {
-      this.setSearchHistory(this.query)
-    },
     ...mapActions([
-      'setSearchHistory',
       'clearSearchHistory',
-      'deleteSearchHistory'
     ])
   },
 };
