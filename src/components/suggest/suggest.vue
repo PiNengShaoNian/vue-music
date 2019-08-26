@@ -93,7 +93,7 @@ export default {
       } else {
         this.insertSong(item);
       }
-      this.$emit("select", item + i);
+      this.$emit("select", item);
     },
     _checkMore(data) {
       const song = data.song;

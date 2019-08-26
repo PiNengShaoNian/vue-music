@@ -73,6 +73,15 @@ export default {
   created () {
     this._getHotKey()
   },
+  watch: {
+    query(val) {
+      if(!val) {
+        setTimeout(() => {
+          this.$refs.shortcut.refresh()
+        }, 20)
+      }
+    }
+  },
   methods: {
     handlePlaylist(playlist) {
       const bottom = playlist.length > 0 ? '60px' : ''
@@ -114,8 +123,8 @@ export default {
 </script>
 
 <style lang="stylus" scoped>
-  @import '~common/stylus/variable'
-  @import '~common/stylus/mixin'
+ @import "~common/stylus/variable"
+  @import "~common/stylus/mixin"
 
   .search
     .search-box-wrapper
@@ -136,7 +145,7 @@ export default {
             color: $color-text-l
           .item
             display: inline-block
-            padding: 2px 10px
+            padding: 5px 10px
             margin: 0 20px 10px 0
             border-radius: 6px
             background: $color-highlight-background

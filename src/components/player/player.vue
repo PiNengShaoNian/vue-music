@@ -94,28 +94,31 @@
             <i @click.stop="togglePlaying" class="icon-mini" :class="miniIcon"></i>
           </progress-circle>
         </div>
-        <div class="control">
+        <div class="control" @click.stop='showPlaylist'>
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
+    <playlist ref='playlist'></playlist>
     <audio @ended="end" ref="audio" @error="error" @timeupdate="timeupdate"></audio>
   </div>
 </template>
 
 <script>
-import { mapGetters, mapMutations } from "vuex";
 import animations from "create-keyframe-animation";
 import { getSongUrl } from "api/song";
+import { mapGetters, mapMutations } from 'vuex';
 import ProgressBar from "base/progress-bar/progress-bar.vue";
 import ProgressCircle from "base/progress-circle/progress-circle.vue";
+import Playlist from 'components/playlist/playlist.vue'
 import Scroll from "base/scroll/scroll.vue";
-import { playMode } from "common/js/config";
 import { shuffle } from "common/js/utils";
 import Lyric from "lyric-parser";
+import { playerMixin } from 'common/js/mixin'
 
 export default {
   name: "player",
+  mixins: [playerMixin],
   data() {
     return {
       currentTime: 0,
@@ -129,7 +132,8 @@ export default {
   components: {
     ProgressBar,
     ProgressCircle,
-    Scroll
+    Scroll,
+    Playlist
   },
   computed: {
     playIcon() {
@@ -144,28 +148,19 @@ export default {
     percent() {
       return this.currentTime / this.currentSong.duration;
     },
-    iconMode() {
-      return this.mode === playMode.sequence
-        ? "icon-sequence"
-        : this.mode === playMode.loop
-        ? "icon-loop"
-        : "icon-random";
-    },
     ...mapGetters([
       "fullScreen",
-      "currentSong",
-      "playing",
-      "currentIndex",
-      "playlist",
-      "mode",
-      "sequenceList"
+      "playing"
     ])
   },
   created() {
     this.touch = {};
   },
   watch: {
-    currentSong() {
+    currentSong(newSong, oldSong) {
+      if(newSong.id === oldSong.id)  {
+        return
+      }
       getSongUrl(this.currentSong).then(res => {
         if (res) this.isAvaiableUrl = true;
         else this.isAvaiableUrl = false;
@@ -194,6 +189,9 @@ export default {
     }
   },
   methods: {
+    showPlaylist() {
+      this.$refs.playlist.show()
+    },
     middleTouchStart(e) {
       this.touch.initiated = true;
       const touch = e.touches[0];
@@ -306,23 +304,7 @@ export default {
       const minute = (interval / 60) | 0;
       const second = this._pad(interval % 60);
       return `${minute}:${second}`;
-    },
-    changeMode() {
-      const mode = (this.mode + 1) % 3;
-      this.setPlayMode(mode);
-      let list = null;
-      if (mode === playMode.random) {
-        list = shuffle(this.sequenceList);
-      } else list = this.sequenceList;
-      this.resetCurrentIndex(list);
-      this.setPlaylist(list);
-    },
-    resetCurrentIndex(list) {
-      let index = list.findIndex(item => {
-        return item.id === this.currentSong.id;
-      });
-      this.setCurrentIndex(index);
-    },
+    },    
     _pad(num, n = 2) {
       let len = num.toString().length;
       while (len < n) {
@@ -411,11 +393,7 @@ export default {
       this.setFullScreen(false);
     },
     ...mapMutations({
-      setFullScreen: "SET_FULL_SCREEN",
-      setPlayState: "SET_PLAYING_STATE",
-      setCurrentIndex: "SET_CURRENT_INDEX",
-      setPlayMode: "SET_PLAY_MODE",
-      setPlaylist: "SET_PLAYLIST"
+      setFullScreen: "SET_FULL_SCREEN"
     })
   }
 };
