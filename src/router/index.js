@@ -7,6 +7,7 @@ import Recommend from '../components/recommend/recommend.vue'
 import SingerDetail from '../components/singer-detail/singer-detail.vue'
 import Disc from '../components/disc/disc.vue'
 import TopList from '../components/top-list/top-list.vue'
+import UserCenter from 'components/user-center/user-center.vue'
 
 Vue.use(Router)
 
@@ -43,6 +44,9 @@ export default new Router({
         path: ':id',
         component: Disc
       }]
+    }, {
+      path: '/user',
+      component: UserCenter
     }
   ]
 })

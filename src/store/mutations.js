@@ -33,5 +33,8 @@ export default  {
     },
     [types.SET_PLAY_HISTORY] (state, history) {
         state.playHistory = history
+    },
+    [types.SET_FAVORITE_LIST] (state, favorite) {
+        state.favoriteList = favorite
     }
 }
